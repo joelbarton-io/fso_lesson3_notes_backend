@@ -31,6 +31,7 @@ let notes = [
   },
 ];
 
+app.get("/", (req, res) => res.send("backend is running"));
 app.get("/api/notes", (req, res) => res.send(JSON.stringify(notes)));
 
 app.post("/api/notes", (req, res) => {
