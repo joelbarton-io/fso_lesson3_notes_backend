@@ -1,18 +1,13 @@
 const express = require("express");
-const morgan = require("morgan");
 const cors = require("cors");
-const app = express();
+const morgan = require("morgan");
 
-app.use(cors());
+const app = express();
 app.use(express.static("dist"));
+app.use(cors());
 app.use(express.json());
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 app.use(morgan(":method :url :status :response-time :body"));
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, () => {
-  console.log("Server running on port 3001");
-});
 
 let notes = [
   {
@@ -32,18 +27,48 @@ let notes = [
   },
 ];
 
-app.get("/", (req, res) => res.send("backend is running"));
-app.get("/api/notes", (req, res) => res.send(JSON.stringify(notes)));
+app.get("/", (req, res) => res.send("<h1>Notes App</h1>"));
+
+app.get("/api/notes", (req, res) => res.json(notes));
 
 app.post("/api/notes", (req, res) => {
-  const { content, important } = req.body;
-  const id = (() => +Math.random().toFixed(6) * 1_000_000)();
-  const newNote = {
-    id,
-    content,
-    important,
+  const body = req.body;
+
+  if (!body.content) {
+    return response.status(400).json({
+      error: "content missing",
+    });
+  }
+
+  const note = {
+    id: (() => +Math.random().toFixed(6) * 1_000_000)(),
+    content: body.content,
+    important: body.important,
   };
 
-  notes = notes.concat(newNote);
-  res.status(201).json(newNote);
+  notes = notes.concat(note);
+  res.status(201).json(note);
+});
+
+app.get("/api/notes/:id", (req, res) => {
+  const noteID = +req.params.id;
+  const note = notes.find(({ id }) => noteID === id);
+  if (note) {
+    res.json(note);
+  } else {
+    res.status(404).json({
+      error: "note not found",
+    });
+  }
+});
+
+app.delete("/api/notes/:id", (req, res) => {
+  const noteID = +req.params.id;
+  notes = notes.filter(({ id }) => id === noteID);
+  res.status(204).end();
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log("Server running on port 3001");
 });
