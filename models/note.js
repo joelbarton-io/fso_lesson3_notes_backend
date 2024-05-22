@@ -10,18 +10,17 @@ const mongoose = require("mongoose");
     use constructor to create db data
 */
 
-const uri = process.env.MONGODB_URI;
-console.log(uri);
 mongoose.set("strictQuery", false);
 
 console.log("connecting to mongodb cluster...");
 
 mongoose
-  .connect(uri)
+  .connect(process.env.MONGODB_URI)
   .then((res) => {
     console.log(`successfully connected to mongodb cluster`);
   })
   .catch((reason) => {
+    console.log(reason);
     console.log("failed to connect to mongodb cluster, REASON:", reason.errmsg);
   });
 

@@ -3,6 +3,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config();
 const Note = require("./models/note");
+const note = require("./models/note");
 
 /* non-extracted mongoose setup code
 const password = process.argv[2];
@@ -55,7 +56,7 @@ app.post("/api/notes", (req, res) => {
   });
 
   note.save().then((savedNote) => {
-    console.log("note saved");
+    console.log("note saved on mongodb cluster");
     res.status(201).json(savedNote);
   });
 });
@@ -81,11 +82,44 @@ app.get("/api/notes/:id", (req, res) => {
   //   }
 });
 
-// app.delete("/api/notes/:id", (req, res) => {
-//   const noteID = +req.params.id;
-//   notes = notes.filter(({ id }) => id === noteID);
-//   res.status(204).end();
-// });
+app.delete("/api/notes/:id", async (req, res) => {
+  try {
+    const something = await Note.findByIdAndDelete(req.params.id);
+
+    res.status(204).end();
+  } catch (e) {
+    console.log(`oops ${e.message}`);
+    res.status(404).json({ error: "note could not be deleted" });
+  }
+});
+
+// not working, losing key in frontend code??
+app.put("/api/notes/:id", async (req, res) => {
+  console.log("made it to route");
+  console.log(req.body.content, req.body.id, req.body.important);
+  //   res.statusMessage = "poop";
+  //   res.status(500).end();
+  try {
+    const noteToUpdate = await Note.findById(req.params.id);
+    if (!noteToUpdate) {
+      res.statusMessage = "resource could not be found";
+      res.status(404).json({
+        error:
+          "Note could not be updated because it wasn't found on the database",
+      });
+    }
+
+    noteToUpdate.important = req.body.important;
+    noteToUpdate.content = req.body.content;
+
+    noteToUpdate.save().then((savedNote) => {
+      console.log("note updated on mongodb cluster");
+      res.status(204).json(savedNote);
+    });
+  } catch (e) {
+    console.log(`something failed when attempting to update ${e.message}`);
+  }
+});
 
 const PORT = process.env.PORT;
 
