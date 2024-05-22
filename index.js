@@ -4,24 +4,26 @@ const morgan = require("morgan");
 require("dotenv").config();
 const Note = require("./models/note");
 
-// const password = process.argv[2];
-// const url = `mongodb+srv://FSO_barton:${password}@cluster0.ymntqea.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`;
-// mongoose.set("strictQuery", false);
-// mongoose.connect(url);
-// const noteSchema = mongoose.Schema({
-//   content: String,
-//   important: Boolean,
-// });
+/* non-extracted mongoose setup code
+const password = process.argv[2];
+const url = `mongodb+srv://FSO_barton:${password}@cluster0.ymntqea.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`;
+mongoose.set("strictQuery", false);
+mongoose.connect(url);
+const noteSchema = mongoose.Schema({
+  content: String,
+  important: Boolean,
+});
 
-// noteSchema.set("toJSON", {
-//   transform: (document, returnedObject) => {
-//     returnedObject.id = returnedObject._id.toString();
-//     delete returnedObject._id;
-//     delete returnedObject.__v;
-//   },
-// });
+noteSchema.set("toJSON", {
+  transform: (document, returnedObject) => {
+    returnedObject.id = returnedObject._id.toString();
+    delete returnedObject._id;
+    delete returnedObject.__v;
+  },
+});
 
-// const Note = mongoose.model("Note", noteSchema);
+const Note = mongoose.model("Note", noteSchema);
+ */
 
 const app = express();
 app.use(express.static("dist"));
@@ -47,35 +49,46 @@ app.post("/api/notes", (req, res) => {
     });
   }
 
-  const note = {
-    id: (() => +Math.random().toFixed(6) * 1_000_000)(),
+  const note = new Note({
     content: body.content,
-    important: body.important,
-  };
+    important: body.important || false,
+  });
 
-  notes = notes.concat(note);
-  res.status(201).json(note);
+  note.save().then((savedNote) => {
+    console.log("note saved");
+    res.status(201).json(savedNote);
+  });
 });
 
 app.get("/api/notes/:id", (req, res) => {
-  const noteID = +req.params.id;
-  const note = notes.find(({ id }) => noteID === id);
-  if (note) {
-    res.json(note);
-  } else {
-    res.status(404).json({
-      error: "note not found",
-    });
-  }
+  Note.findById(req.params.id).then((note) => {
+    if (note) {
+      res.json(note);
+    } else {
+      res.status(404).json({
+        error: "note not found",
+      });
+    }
+  });
+
+  //   const note = notes.find(({ id }) => noteID === id);
+  //   if (note) {
+  //     res.json(note);
+  //   } else {
+  //     res.status(404).json({
+  //       error: "note not found",
+  //     });
+  //   }
 });
 
-app.delete("/api/notes/:id", (req, res) => {
-  const noteID = +req.params.id;
-  notes = notes.filter(({ id }) => id === noteID);
-  res.status(204).end();
-});
+// app.delete("/api/notes/:id", (req, res) => {
+//   const noteID = +req.params.id;
+//   notes = notes.filter(({ id }) => id === noteID);
+//   res.status(204).end();
+// });
 
 const PORT = process.env.PORT;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

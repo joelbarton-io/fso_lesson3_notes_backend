@@ -4,6 +4,7 @@ if (process.argv.length < 3) {
   console.log("give password as argument");
   process.exit(1);
 }
+
 console.log(process.argv[3]);
 const password = process.argv[2];
 const url = `mongodb+srv://FSO_barton:${password}@cluster0.ymntqea.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`;
