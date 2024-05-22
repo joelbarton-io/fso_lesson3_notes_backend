@@ -1,34 +1,27 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-/* mongoose setup:
-    acess mongoose module
-    get password from cli input
-    configure mongoose options
-    connect to the cluster via the url
-    create document? schema
-    create a model constructor based on schema
-    use constructor to create db data
-*/
-const mongoose = require("mongoose");
-const password = process.argv[2];
-const url = `mongodb+srv://FSO_barton:${password}@cluster0.ymntqea.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`;
-mongoose.set("strictQuery", false);
-mongoose.connect(url);
-const noteSchema = mongoose.Schema({
-  content: String,
-  important: Boolean,
-});
+require("dotenv").config();
+const Note = require("./models/note");
 
-noteSchema.set("toJSON", {
-  transform: (document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString();
-    delete returnedObject._id;
-    delete returnedObject.__v;
-  },
-});
+// const password = process.argv[2];
+// const url = `mongodb+srv://FSO_barton:${password}@cluster0.ymntqea.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`;
+// mongoose.set("strictQuery", false);
+// mongoose.connect(url);
+// const noteSchema = mongoose.Schema({
+//   content: String,
+//   important: Boolean,
+// });
 
-const Note = mongoose.model("Note", noteSchema);
+// noteSchema.set("toJSON", {
+//   transform: (document, returnedObject) => {
+//     returnedObject.id = returnedObject._id.toString();
+//     delete returnedObject._id;
+//     delete returnedObject.__v;
+//   },
+// });
+
+// const Note = mongoose.model("Note", noteSchema);
 
 const app = express();
 app.use(express.static("dist"));
@@ -82,7 +75,7 @@ app.delete("/api/notes/:id", (req, res) => {
   res.status(204).end();
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
-  console.log("Server running on port 3001");
+  console.log(`Server running on port ${PORT}`);
 });
