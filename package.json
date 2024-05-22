@@ -1,5 +1,6 @@
 {
-  "name": "3_notes_backend",  "version": "1.0.0",
+  "name": "3_notes_backend",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -17,6 +18,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
+    "mongoose": "^8.4.0",
     "morgan": "^1.10.0"
   }
 }

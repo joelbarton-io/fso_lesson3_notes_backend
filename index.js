@@ -1,6 +1,34 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+/* mongoose setup:
+    acess mongoose module
+    get password from cli input
+    configure mongoose options
+    connect to the cluster via the url
+    create document? schema
+    create a model constructor based on schema
+    use constructor to create db data
+*/
+const mongoose = require("mongoose");
+const password = process.argv[2];
+const url = `mongodb+srv://FSO_barton:${password}@cluster0.ymntqea.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`;
+mongoose.set("strictQuery", false);
+mongoose.connect(url);
+const noteSchema = mongoose.Schema({
+  content: String,
+  important: Boolean,
+});
+
+noteSchema.set("toJSON", {
+  transform: (document, returnedObject) => {
+    returnedObject.id = returnedObject._id.toString();
+    delete returnedObject._id;
+    delete returnedObject.__v;
+  },
+});
+
+const Note = mongoose.model("Note", noteSchema);
 
 const app = express();
 app.use(express.static("dist"));
@@ -9,27 +37,13 @@ app.use(express.json());
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 app.use(morgan(":method :url :status :response-time :body"));
 
-let notes = [
-  {
-    id: 1,
-    content: "HTML is easy",
-    important: true,
-  },
-  {
-    id: 2,
-    content: "Browser can execute only JavaScript",
-    important: false,
-  },
-  {
-    id: 3,
-    content: "GET and POST are the most important methods of HTTP protocol",
-    important: true,
-  },
-];
-
 app.get("/", (req, res) => res.send("<h1>Notes App</h1>"));
 
-app.get("/api/notes", (req, res) => res.json(notes));
+app.get("/api/notes", (req, res) => {
+  Note.find({}).then((notes) => {
+    res.json(notes);
+  });
+});
 
 app.post("/api/notes", (req, res) => {
   const body = req.body;
