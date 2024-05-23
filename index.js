@@ -85,7 +85,6 @@ app.get("/api/notes/:id", (req, res) => {
 app.delete("/api/notes/:id", async (req, res) => {
   try {
     const something = await Note.findByIdAndDelete(req.params.id);
-
     res.status(204).end();
   } catch (e) {
     console.log(`oops ${e.message}`);
