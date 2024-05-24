@@ -3,7 +3,6 @@ const cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config();
 const Note = require("./models/note");
-const note = require("./models/note");
 
 /* non-extracted mongoose setup code
 const password = process.argv[2];
@@ -28,100 +27,89 @@ const Note = mongoose.model("Note", noteSchema);
 
 const app = express();
 app.use(express.static("dist"));
-app.use(cors());
 app.use(express.json());
+app.use(cors());
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 app.use(morgan(":method :url :status :response-time :body"));
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+app.use(errorHandler);
 
 app.get("/", (req, res) => res.send("<h1>Notes App</h1>"));
 
-app.get("/api/notes", (req, res) => {
-  Note.find({}).then((notes) => {
-    res.json(notes);
-  });
-});
-
-app.post("/api/notes", (req, res) => {
-  const body = req.body;
-
-  if (!body.content) {
-    return response.status(400).json({
-      error: "content missing",
-    });
-  }
-
-  const note = new Note({
-    content: body.content,
-    important: body.important || false,
-  });
-
-  note.save().then((savedNote) => {
-    console.log("note saved on mongodb cluster");
-    res.status(201).json(savedNote);
-  });
-});
-
-app.get("/api/notes/:id", (req, res) => {
-  Note.findById(req.params.id).then((note) => {
-    if (note) {
-      res.json(note);
-    } else {
-      res.status(404).json({
-        error: "note not found",
-      });
-    }
-  });
-
-  //   const note = notes.find(({ id }) => noteID === id);
-  //   if (note) {
-  //     res.json(note);
-  //   } else {
-  //     res.status(404).json({
-  //       error: "note not found",
-  //     });
-  //   }
-});
-
-app.delete("/api/notes/:id", async (req, res) => {
+app.get("/api/notes", async (req, res, next) => {
   try {
-    const something = await Note.findByIdAndDelete(req.params.id);
+    const notes = await Note.find({});
+    res.json(notes);
+  } catch (e) {
+    next(e);
+  }
+});
+
+app.post("/api/notes", async (req, res, next) => {
+  try {
+    const note = new Note({
+      content: req.body.content,
+      important: req.body.important,
+    });
+
+    const savedNote = await note.save();
+    // console.log("from route handler: ", savedNote);
+    res.status(201).json(savedNote); // had wrong status code!!
+  } catch (e) {
+    next(e);
+  }
+});
+
+app.get("/api/notes/:id", async (req, res, next) => {
+  try {
+    const note = await Note.findById(req.params.id);
+    if (note) {
+      return res.json(note);
+    }
+    // what about here though? another response?
+  } catch (e) {
+    next(e);
+  }
+});
+
+app.delete("/api/notes/:id", async (req, res, next) => {
+  try {
+    await Note.findByIdAndDelete(req.params.id);
     res.status(204).end();
   } catch (e) {
-    console.log(`oops ${e.message}`);
-    res.status(404).json({ error: "note could not be deleted" });
+    next(e);
   }
 });
 
-// not working, losing key in frontend code??
-app.put("/api/notes/:id", async (req, res) => {
-  console.log("made it to route");
-  console.log(req.body.content, req.body.id, req.body.important);
-  //   res.statusMessage = "poop";
-  //   res.status(500).end();
+// was not working previously, losing key in frontend code??
+app.put("/api/notes/:id", async (req, res, next) => {
   try {
-    const noteToUpdate = await Note.findById(req.params.id);
-    if (!noteToUpdate) {
-      res.statusMessage = "resource could not be found";
-      res.status(404).json({
-        error:
-          "Note could not be updated because it wasn't found on the database",
-      });
-    }
+    const note = {
+      content: req.body.content,
+      important: req.body.important,
+    };
 
-    noteToUpdate.important = req.body.important;
-    noteToUpdate.content = req.body.content;
-
-    noteToUpdate.save().then((savedNote) => {
-      console.log("note updated on mongodb cluster");
-      res.status(204).json(savedNote);
+    const updated = await Note.findByIdAndUpdate(req.params.id, note, {
+      new: true,
     });
+    res.json(updated);
   } catch (e) {
-    console.log(`something failed when attempting to update ${e.message}`);
+    next(e);
   }
 });
 
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}...`);
 });
