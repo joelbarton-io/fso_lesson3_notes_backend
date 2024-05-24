@@ -30,19 +30,7 @@ app.use(express.static("dist"));
 app.use(express.json());
 app.use(cors());
 morgan.token("body", (req, res) => JSON.stringify(req.body));
-app.use(morgan(":method :url :status :response-time :body"));
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
-
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "malformatted id" });
-  }
-
-  next(error);
-};
-
-// this has to be the last loaded middleware, also all the routes should be registered before this!
-app.use(errorHandler);
+app.use(morgan("MORGAN-> :method :url :status :response-time :body"));
 
 app.get("/", (req, res) => res.send("<h1>Notes App</h1>"));
 
@@ -62,10 +50,13 @@ app.post("/api/notes", async (req, res, next) => {
       important: req.body.important,
     });
 
-    const savedNote = await note.save();
-    // console.log("from route handler: ", savedNote);
-    res.status(201).json(savedNote); // had wrong status code!!
+    console.log("note from inside router ->", note);
+    // res.status(404).end();
+    const savedNote = await note.save(); // this line is the place where it fails
+
+    res.status(201).json(savedNote);
   } catch (e) {
+    console.log("RIGHT HERE");
     next(e);
   }
 });
@@ -94,20 +85,38 @@ app.delete("/api/notes/:id", async (req, res, next) => {
 // was not working previously, losing key in frontend code??
 app.put("/api/notes/:id", async (req, res, next) => {
   try {
-    const note = {
-      content: req.body.content,
-      important: req.body.important,
-    };
+    const { content, important } = req.body;
 
-    const updated = await Note.findByIdAndUpdate(req.params.id, note, {
-      new: true,
-    });
+    const updated = await Note.findByIdAndUpdate(
+      req.params.id,
+      {
+        content,
+        important,
+      },
+      {
+        new: true,
+        runValidators: true,
+        context: "query",
+      }
+    );
     res.json(updated);
   } catch (e) {
     next(e);
   }
 });
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
+  }
+  next(error);
+};
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+app.use(errorHandler);
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
