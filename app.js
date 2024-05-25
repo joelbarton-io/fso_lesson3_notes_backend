@@ -1,6 +1,6 @@
 const config = require('./utils/config')
 const express = require('express')
-const app = require('./app')
+const app = express()
 const cors = require('cors')
 const notesRouter = require('./controllers/notes')
 const middleware = require('./utils/middleware')
@@ -18,10 +18,7 @@ mongoose
     )
   })
   .catch((error) => {
-    logger.error(
-      'failed to connect to mongodb cluster, REASON:',
-      error.message
-    )
+    logger.error('failed to connect to mongodb cluster, REASON:', error.message)
   })
 
 app.use(cors())
