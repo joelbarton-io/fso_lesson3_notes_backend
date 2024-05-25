@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 /* mongoose setup:
     access mongoose module
     get password from cli input
@@ -9,21 +9,6 @@ const mongoose = require("mongoose");
     create a model constructor based on schema
     use constructor to create db data
 */
-
-mongoose.set("strictQuery", false);
-
-console.log("connecting to mongodb cluster...");
-
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then((res) => {
-    console.log(`successfully connected to mongodb cluster`);
-  })
-  .catch((reason) => {
-    console.log(reason);
-    console.log("failed to connect to mongodb cluster, REASON:", reason.errmsg);
-  });
-
 const noteSchema = mongoose.Schema({
   content: {
     type: String,
@@ -31,14 +16,14 @@ const noteSchema = mongoose.Schema({
     required: true,
   },
   important: Boolean,
-});
+})
 
-noteSchema.set("toJSON", {
+noteSchema.set('toJSON', {
   transform: (document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString();
-    delete returnedObject._id;
-    delete returnedObject.__v;
+    returnedObject.id = returnedObject._id.toString()
+    delete returnedObject._id
+    delete returnedObject.__v
   },
-});
+})
 
-module.exports = mongoose.model("Note", noteSchema);
+module.exports = mongoose.model('Note', noteSchema)
