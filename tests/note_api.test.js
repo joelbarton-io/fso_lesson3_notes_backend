@@ -4,17 +4,16 @@ const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const helper = require('./test_helper')
+// const logger = require('../utils/logger')
 const app = require('../app')
 const api = supertest(app)
 
 beforeEach(async () => {
   await Note.deleteMany({})
 
-  let noteObject = new Note(helper.initialNotes[0])
-  await noteObject.save()
-
-  noteObject = new Note(helper.initialNotes[1])
-  await noteObject.save()
+  const noteObjects = helper.initialNotes.map((note) => new Note(note))
+  const promiseArray = noteObjects.map((note) => note.save())
+  await Promise.all(promiseArray)
 })
 
 describe('General', () => {
@@ -89,6 +88,13 @@ describe('Routes ', () => {
     assert(!contents.includes(note.content))
     assert.ok(notesEnd.length, helper.initialNotes.length - 1)
   })
+  //   test('Delete (an invalid note)', async () => {
+  //     const fakeID = await helper.nonExistingId()
+  //     const notesStart = await helper.notesInDb()
+  //     await api.delete(`/api/notes/${fakeID}`).expect(404)
+  //     const notesEnd = await helper.notesInDb()
+  //     assert.ok(notesStart.length, notesEnd.length)
+  //   })
 })
 
 after(async () => {
