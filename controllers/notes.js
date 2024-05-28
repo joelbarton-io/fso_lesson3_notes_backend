@@ -14,9 +14,9 @@ notesRouter.get('/:id', async (req, res, next) => {
   try {
     const note = await Note.findById(req.params.id)
     if (note) {
-      return res.json(note)
+      return res.status(200).json(note)
     }
-    // what about here though? another response?
+    return res.status(404).end()
   } catch (e) {
     next(e)
   }
@@ -26,9 +26,9 @@ notesRouter.post('/', async (req, res, next) => {
   try {
     const note = new Note({
       content: req.body.content,
-      important: req.body.important,
+      important: req.body.important || false,
     })
-    const savedNote = await note.save() // this line is the place where it fails
+    const savedNote = await note.save()
     res.status(201).json(savedNote)
   } catch (e) {
     next(e)
