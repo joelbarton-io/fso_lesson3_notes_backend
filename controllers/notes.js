@@ -28,7 +28,6 @@ notesRouter.post('/', async (req, res, next) => {
       content: req.body.content,
       important: req.body.important,
     })
-
     const savedNote = await note.save() // this line is the place where it fails
     res.status(201).json(savedNote)
   } catch (e) {
@@ -48,20 +47,18 @@ notesRouter.delete('/:id', async (req, res, next) => {
 // was not working previously, losing key in frontend code??
 notesRouter.put('/:id', async (req, res, next) => {
   try {
-    const { content, important } = req.body
+    const id = req.params.id
+    const note = {
+      content: req.body.content,
+      important: req.body.important,
+    }
+    const options = {
+      new: true,
+      runValidators: true,
+      context: 'query',
+    }
 
-    const updated = await Note.findByIdAndUpdate(
-      req.params.id,
-      {
-        content,
-        important,
-      },
-      {
-        new: true,
-        runValidators: true,
-        context: 'query',
-      }
-    )
+    const updated = await Note.findByIdAndUpdate(id, note, options)
     res.json(updated)
   } catch (e) {
     next(e)

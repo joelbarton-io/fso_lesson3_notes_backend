@@ -1,54 +1,49 @@
-const mongoose = require("mongoose");
+/* mongoose setup:
+    access mongoose module
+    configure mongoose options
+    connect to the cluster via the url
+    create document? schema
+    - modify schema with set() to change how data is rendered with `toJSON`
+    create a model constructor based on schema
+    use constructor to create db data
+*/
+require('dotenv').config()
+const mongoose = require('mongoose')
+const logger = require('./utils/logger')
+const Note = require('./models/note')
+// couldn't access process.env.TEST_MONGODB_URI for some reason
+const uri = process.env.TEST_MONGODB_URI
 
-if (process.argv.length < 3) {
-  console.log("give password as argument");
-  process.exit(1);
-}
+mongoose.set('strictQuery', false)
 
-console.log(process.argv[3]);
-const password = process.argv[2];
-const url = `mongodb+srv://FSO_barton:${password}@cluster0.ymntqea.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0`;
+console.log(uri)
+mongoose
+  .connect(uri)
+  .then((res) => {
+    logger.info(
+      `successfully connected to mongodb cluster ${res.connections[0].name}`
+    )
+  })
+  .catch((error) => {
+    logger.error('failed to connect to mongodb cluster, REASON:', error.message)
+  })
 
-mongoose.set("strictQuery", false);
-mongoose.connect(url);
-
-const noteSchema = new mongoose.Schema({
-  content: String,
-  important: Boolean,
-});
-
-const Note = mongoose.model("Note", noteSchema);
-
-// Note.find({}).then((res) => {
-//   res.forEach((note) => console.log(note));
-//   mongoose.connection.close();
-// });
-let notes = [
+const notes = [
   {
-    content: "HTML is easy",
+    content: 'HTML is easy',
     important: true,
   },
   {
-    content: "Browser can execute only JavaScript",
+    content: 'Browser can execute only JavaScript',
     important: false,
   },
   {
-    content: "GET and POST are the most important methods of HTTP protocol",
+    content: 'GET and POST are the most important methods of HTTP protocol',
     important: true,
   },
-];
+]
 Note.insertMany(notes).then((res) => {
-  console.log(res);
-  console.log(`added ${notes.length} notes to the notes database`);
-  mongoose.connection.close();
-});
-
-// const note = new Note({
-//   content: "HTML is easy",
-//   important: true,
-// });
-
-// note.save().then((result) => {
-//   console.log("note saved!");
-//   mongoose.connection.close();
-// });
+  logger.info(res)
+  logger.info(`added ${notes.length} notes to the notes database`)
+  mongoose.connection.close()
+})
