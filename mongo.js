@@ -11,12 +11,11 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 const logger = require('./utils/logger')
 const Note = require('./models/note')
-// couldn't access process.env.TEST_MONGODB_URI for some reason
-const uri = process.env.TEST_MONGODB_URI
+const User = require('./models/user')
+const uri = process.env.MONGODB_URI
 
 mongoose.set('strictQuery', false)
 
-console.log(uri)
 mongoose
   .connect(uri)
   .then((res) => {
@@ -42,6 +41,19 @@ const notes = [
     important: true,
   },
 ]
+const users = [
+  {
+    username: 'root',
+    user: 'rootytooty',
+    password: '123',
+  },
+]
+
+User.insertMany(users).then((res) => {
+  logger.info(res)
+  logger.info(`added ${users.length} users to the users database`)
+})
+
 Note.insertMany(notes).then((res) => {
   logger.info(res)
   logger.info(`added ${notes.length} notes to the notes database`)

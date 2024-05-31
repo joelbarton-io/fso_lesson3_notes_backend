@@ -7,25 +7,27 @@ const { describe, test, beforeEach, after } = require('node:test')
 const assert = require('node:assert')
 const api = supertest(app)
 const { usersInDb } = require('./helper')
-const print = require('../utils/logger')
+// const print = require('../utils/logger')
 
 describe('when there is initially one user in db', () => {
   beforeEach(async () => {
     await User.deleteMany({})
+
     const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'root', passwordHash })
+    const user = new User({ username: 'LEROYYY JENKINS', passwordHash })
+
     await user.save()
   })
 
   test('creation succeeds with a fresh username', async () => {
     const beforeAdd = await usersInDb()
-    const newUser = new User({
-      username: 'LEROYYY JENKINS',
+    const newUser = {
+      username: 'Leroy',
       name: 'Leroy',
       // eslint-disable-next-line @stylistic/js/quotes
       password: "comms up, ok let's do this!",
-    })
-    print.error(newUser)
+    }
+
     await api
       .post('/api/users')
       .send(newUser)
@@ -40,11 +42,11 @@ describe('when there is initially one user in db', () => {
 
   test('creation fails with a existing username', async () => {
     const listBefore = await usersInDb()
-    const duplicateUser = new User({
+    const duplicateUser = {
       username: 'LEROYYY JENKINS',
       name: 'Leroy',
       password: 'supersecret',
-    })
+    }
 
     const response = await api
       .post('/api/users')
@@ -59,7 +61,6 @@ describe('when there is initially one user in db', () => {
 })
 
 after(async () => {
-  print.info('disconnecting...')
   await User.deleteMany({})
   await mongoose.connection.close()
 })
