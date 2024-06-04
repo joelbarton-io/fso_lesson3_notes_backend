@@ -41,10 +41,11 @@ const notes = [
     important: true,
   },
 ]
+
 const users = [
   {
     username: 'root',
-    user: 'rootytooty',
+    name: 'rootytooty',
     password: '123',
   },
 ]

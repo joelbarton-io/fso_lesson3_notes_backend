@@ -1,11 +1,7 @@
 const mongoose = require('mongoose')
 const options = {
-  username: {
-    type: String,
-    unique: true,
-    required: true,
-  },
-  password: String,
+  username: String,
+  name: String,
   passwordHash: String,
   notes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Note' }],
 }
@@ -19,6 +15,7 @@ const toJSONOptions = {
   },
 }
 const UserSchema = new mongoose.Schema(options)
+
 UserSchema.set('toJSON', toJSONOptions)
 
 module.exports = mongoose.model('User', UserSchema)
