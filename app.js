@@ -31,7 +31,12 @@ app.use(middleware.requestLogger)
 app.use('/api/notes', notesRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
+console.error({ mode: process.env.NODE_ENV })
 
+if (process.env.NODE_ENV === 'test') {
+  const testingRouter = require('./controllers/testing')
+  app.use('/api/testing', testingRouter)
+}
 // this has to be the last loaded middleware, also all the routes should be registered before this!
 app.use(middleware.errorHandler)
 module.exports = app
